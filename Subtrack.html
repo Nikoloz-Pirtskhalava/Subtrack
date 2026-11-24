@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Subtrack demo</title>
+    <style>
+      :root {
+        --bg: #f2f4f0;
+        --panel: #fff;
+        --ink: #17261f;
+        --mute: #66756d;
+        --line: #dde3dc;
+        --accent: #1f6f54;
+        --soon: #b4470f;
+        --soon-bg: #fdeee4;
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #111a16;
+          --panel: #18241f;
+          --ink: #e6efe9;
+          --mute: #98a99f;
+          --line: #2a3a33;
+          --accent: #4fb28c;
+          --soon: #f08a54;
+          --soon-bg: #2b1f17;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #111a16;
+        --panel: #18241f;
+        --ink: #e6efe9;
+        --mute: #98a99f;
+        --line: #2a3a33;
+        --accent: #4fb28c;
+        --soon: #f08a54;
+        --soon-bg: #2b1f17;
+        color-scheme: dark;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 28px 20px 64px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin: 0;
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin: 0 0 12px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .hright {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .note {
+        background: var(--panel);
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-bottom: 20px;
+        font-size: 0.88rem;
+        color: var(--mute);
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        margin-bottom: 16px;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px;
+      }
+      .big {
+        font-size: 2.4rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+      }
+      .mute {
+        color: var(--mute);
+        font-size: 0.9rem;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+      .row:first-of-type {
+        border-top: 0;
+      }
+      .row.soon {
+        background: var(--soon-bg);
+        margin: 0 -18px;
+        padding: 12px 18px;
+        border-left: 3px solid var(--soon);
+      }
+      .badge {
+        font-size: 0.8rem;
+        color: var(--soon);
+        font-weight: 600;
+      }
+      form {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        align-items: end;
+      }
+      label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.85rem;
+        color: var(--mute);
+      }
+      input,
+      select {
+        font: inherit;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--ink);
+      }
+      button {
+        font: inherit;
+        padding: 9px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      button.link {
+        border: 0;
+        background: none;
+        color: var(--accent);
+        padding: 4px;
+      }
+      button.danger {
+        color: var(--soon);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        font-size: 0.9rem;
+      }
+      .dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+      .chart {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      /* auth */
+      #auth {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px 20px;
+      }
+      .card {
+        width: 100%;
+        max-width: 400px;
+      }
+      .card h1 {
+        margin-bottom: 4px;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin: 16px 0;
+      }
+      .tabs button {
+        flex: 1;
+        background: transparent;
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      .tabs button[aria-selected="true"] {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .card form {
+        grid-template-columns: 1fr;
+      }
+      .err {
+        color: var(--soon);
+        font-size: 0.88rem;
+        min-height: 1.3em;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="auth" hidden>
+      <section class="panel card">
+        <h1>Subtrack</h1>
+        <p class="mute" style="margin: 0">
+          Track your subscriptions and never miss a renewal.
+        </p>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" id="tReg" aria-selected="true">
+            Create account
+          </button>
+          <button type="button" role="tab" id="tLog" aria-selected="false">
+            Log in
+          </button>
+        </div>
+
+        <form id="regForm" novalidate>
+          <label>Name<input id="rName" autocomplete="name" required /></label>
+          <label
+            >Email<input id="rEmail" type="email" autocomplete="email" required
+          /></label>
+          <label
+            >Password (8+ characters)<input
+              id="rPass"
+              type="password"
+              autocomplete="new-password"
+              required
+          /></label>
+          <label
+            >Confirm password<input
+              id="rPass2"
+              type="password"
+              autocomplete="new-password"
+              required
+          /></label>
+          <p class="err" id="rErr" role="alert"></p>
+          <button type="submit">Create account</button>
+        </form>
+
+        <form id="logForm" novalidate hidden>
+          <label
+            >Email<input id="lEmail" type="email" autocomplete="email" required
+          /></label>
+          <label
+            >Password<input
+              id="lPass"
+              type="password"
+              autocomplete="current-password"
+              required
+          /></label>
+          <p class="err" id="lErr" role="alert"></p>
+          <button type="submit">Log in</button>
+        </form>
+
+        <p class="mute" style="margin: 14px 0 0; font-size: 0.82rem">
+          Demo mode: accounts are stored in this browser only, with the password
+          hashed.
+        </p>
+      </section>
+    </div>
+
+    <main id="app" hidden>
+      <header>
+        <h1>Subtrack</h1>
+        <div class="hright">
+          <span class="mute" id="who"></span>
+          <button class="ghost" id="reset">Reset demo data</button>
+          <button class="ghost" id="logout">Log out</button>
+        </div>
+      </header>
+
+      <div class="note">
+        Demo mode: your entries are saved in this browser only. The downloadable
+        project adds real accounts and a Supabase database.
+      </div>
+
+      <section class="panel" style="margin-bottom: 16px">
+        <h2 id="formTitle">Add a subscription</h2>
+        <form id="f">
+          <label>Name<input id="name" required placeholder="Netflix" /></label>
+          <label
+            >Cost<input id="cost" type="number" step="0.01" min="0" required
+          /></label>
+          <label
+            >Billing cycle
+            <select id="cycle">
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+          <label>Next renewal<input id="date" type="date" required /></label>
+          <label
+            >Category
+            <select id="cat">
+              <option>Entertainment</option>
+              <option>Utilities</option>
+              <option>Software</option>
+            </select>
+          </label>
+          <div style="display: flex; gap: 8px">
+            <button type="submit" id="save">Add subscription</button>
+            <button type="button" class="ghost" id="cancel" hidden>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>Spend</h2>
+          <div class="big">
+            <span id="m"></span><span class="mute"> / month</span>
+          </div>
+          <p class="mute" id="y" style="margin-top: 8px"></p>
+        </section>
+        <section class="panel">
+          <h2>By category (monthly)</h2>
+          <div id="chart"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h2>Upcoming renewals</h2>
+        <div id="list"></div>
+      </section>
+    </main>
+
+    <script>
+      const USERS_KEY = "subtrack-users",
+        SESSION_KEY = "subtrack-session",
+        DATA_PREFIX = "subtrack-demo-v1:";
+      const COLORS = {
+        Entertainment: "#1f6f54",
+        Utilities: "#d99a2b",
+        Software: "#3b5b8c",
+      };
+      const $ = (id) => document.getElementById(id);
+      const iso = (d) =>
+        d.getFullYear() +
+        "-" +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(d.getDate()).padStart(2, "0");
+      const startOfToday = () => {
+        const n = new Date();
+        return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+      };
+      const inDays = (n) => {
+        const d = startOfToday();
+        d.setDate(d.getDate() + n);
+        return iso(d);
+      };
+      const money = (n) =>
+        n.toLocaleString(undefined, { style: "currency", currency: "USD" });
+      const monthly = (s) => (s.cycle === "yearly" ? s.cost / 12 : s.cost);
+
+      /* storage: in-memory copy + localStorage when available */
+      const mem = {};
+      const read = (k) => {
+        if (k in mem) return mem[k];
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          return v;
+        } catch (e) {
+          return null;
+        }
+      };
+      const write = (k, v) => {
+        mem[k] = v;
+        try {
+          localStorage.setItem(k, JSON.stringify(v));
+        } catch (e) {}
+      };
+      const remove = (k) => {
+        delete mem[k];
+        try {
+          localStorage.removeItem(k);
+        } catch (e) {}
+      };
+
+      /* auth */
+      const hex = (buf) =>
+        [...new Uint8Array(buf)]
+          .map((x) => x.toString(16).padStart(2, "0"))
+          .join("");
+      async function hashPw(pw, salt) {
+        const b = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(salt + ":" + pw),
+        );
+        return hex(b);
+      }
+      const newSalt = () => hex(crypto.getRandomValues(new Uint8Array(16)));
+      const getUsers = () => read(USERS_KEY) || {};
+      let user = null; // {email,name}
+
+      function showAuth(mode) {
+        user = null;
+        $("app").hidden = true;
+        $("auth").hidden = false;
+        const reg = mode !== "login";
+        $("regForm").hidden = !reg;
+        $("logForm").hidden = reg;
+        $("tReg").setAttribute("aria-selected", reg);
+        $("tLog").setAttribute("aria-selected", !reg);
+        $("rErr").textContent = "";
+        $("lErr").textContent = "";
+        (reg ? $("rName") : $("lEmail")).focus();
+      }
+      $("tReg").onclick = () => showAuth("register");
+      $("tLog").onclick = () => showAuth("login");
+
+      $("regForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = $("rName").value.trim(),
+          email = $("rEmail").value.trim().toLowerCase(),
+          p1 = $("rPass").value,
+          p2 = $("rPass2").value,
+          err = $("rErr");
+        if (!name) return (err.textContent = "Enter your name.");
+        if (!/^\S+@\S+\.\S+$/.test(email))
+          return (err.textContent = "Enter a valid email address.");
+        if (p1.length < 8)
+          return (err.textContent =
+            "Use a password with at least 8 characters.");
+        if (p1 !== p2) return (err.textContent = "The passwords don’t match.");
+        const users = getUsers();
+        if (users[email])
+          return (err.textContent =
+            "An account with this email already exists. Log in instead.");
+        try {
+          const salt = newSalt();
+          users[email] = { name, salt, hash: await hashPw(p1, salt) };
+        } catch (x) {
+          return (err.textContent =
+            "Account creation needs a secure (https) connection.");
+        }
+        write(USERS_KEY, users);
+        write(SESSION_KEY, email);
+        e.target.reset();
+        enterApp(email, name);
+      });
+
+      $("logForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = $("lEmail").value.trim().toLowerCase(),
+          pw = $("lPass").value,
+          err = $("lErr");
+        const u = getUsers()[email];
+        let ok = false;
+        try {
+          ok = !!u && (await hashPw(pw, u.salt)) === u.hash;
+        } catch (x) {
+          return (err.textContent =
+            "Log in needs a secure (https) connection.");
+        }
+        if (!ok) return (err.textContent = "Email or password is incorrect.");
+        write(SESSION_KEY, email);
+        e.target.reset();
+        enterApp(email, u.name);
+      });
+
+      $("logout").onclick = () => {
+        remove(SESSION_KEY);
+        showAuth("login");
+      };
+
+      /* app data (per user) */
+      function seed() {
+        return [
+          {
+            id: 1,
+            name: "Netflix",
+            cost: 15.49,
+            cycle: "monthly",
+            date: inDays(3),
+            cat: "Entertainment",
+          },
+          {
+            id: 2,
+            name: "Gym",
+            cost: 39,
+            cycle: "monthly",
+            date: inDays(6),
+            cat: "Utilities",
+          },
+          {
+            id: 3,
+            name: "Cloud storage",
+            cost: 99.99,
+            cycle: "yearly",
+            date: inDays(24),
+            cat: "Software",
+          },
+          {
+            id: 4,
+            name: "Electricity",
+            cost: 82.5,
+            cycle: "monthly",
+            date: inDays(12),
+            cat: "Utilities",
+          },
+          {
+            id: 5,
+            name: "Spotify",
+            cost: 11.99,
+            cycle: "monthly",
+            date: inDays(19),
+            cat: "Entertainment",
+          },
+        ];
+      }
+      let subs = [],
+        editId = null;
+      const persist = () => {
+        if (user) write(DATA_PREFIX + user.email, subs);
+      };
+
+      function enterApp(email, name) {
+        user = { email, name };
+        const saved = read(DATA_PREFIX + email);
+        subs = Array.isArray(saved) ? saved : seed();
+        persist();
+        $("who").textContent = name;
+        $("auth").hidden = true;
+        $("app").hidden = false;
+        clearForm();
+        render();
+        window.scrollTo(0, 0);
+      }
+
+      function effective(s) {
+        const [y, mo, d] = s.date.split("-").map(Number);
+        const dt = new Date(y, mo - 1, d),
+          t = startOfToday();
+        while (dt < t) {
+          if (s.cycle === "yearly") dt.setFullYear(dt.getFullYear() + 1);
+          else dt.setMonth(dt.getMonth() + 1);
+        }
+        return dt;
+      }
+
+      function donut(data) {
+        const total = data.reduce((t, d) => t + d.value, 0),
+          r = 40,
+          c = 2 * Math.PI * r;
+        let off = 0;
+        const arcs = data
+          .map((d) => {
+            const len = (d.value / total) * c;
+            const el = `<circle r="${r}" cx="60" cy="60" fill="none" stroke="${COLORS[d.name]}" stroke-width="22" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"><title>${d.name}: ${money(d.value)}</title></circle>`;
+            off += len;
+            return el;
+          })
+          .join("");
+        const legend = data
+          .map(
+            (d) =>
+              `<span><span class="dot" style="background:${COLORS[d.name]}"></span>${d.name} ${money(d.value)}</span>`,
+          )
+          .join("");
+        return `<div class="chart"><svg viewBox="0 0 120 120" width="150" height="150" role="img" aria-label="Spend by category">${arcs}</svg><div class="legend" style="flex-direction:column;gap:6px">${legend}</div></div>`;
+      }
+
+      const esc = (s) =>
+        s.replace(
+          /[&<>"]/g,
+          (ch) =>
+            ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch],
+        );
+
+      function render() {
+        const m = subs.reduce((t, s) => t + monthly(s), 0);
+        $("m").textContent = money(m);
+        $("y").textContent =
+          money(m * 12) +
+          " per year across " +
+          subs.length +
+          " subscription" +
+          (subs.length === 1 ? "" : "s");
+        const cats = ["Entertainment", "Utilities", "Software"]
+          .map((c) => ({
+            name: c,
+            value: subs
+              .filter((s) => s.cat === c)
+              .reduce((t, s) => t + monthly(s), 0),
+          }))
+          .filter((d) => d.value > 0);
+        $("chart").innerHTML = cats.length
+          ? donut(cats)
+          : '<p class="mute">Add a subscription to see your breakdown.</p>';
+        const t = startOfToday();
+        const rows = subs
+          .map((s) => {
+            const d = effective(s);
+            return { s, d, days: Math.round((d - t) / 86400000) };
+          })
+          .sort((a, b) => a.d - b.d);
+        $("list").innerHTML = rows.length
+          ? rows
+              .map(({ s, d, days }) => {
+                const label =
+                  days === 0
+                    ? "Renews today"
+                    : days === 1
+                      ? "Renews tomorrow"
+                      : "In " + days + " days";
+                return `<div class="row${days <= 7 ? " soon" : ""}">
+      <div><strong>${esc(s.name)}</strong><div class="mute">${s.cat} · ${money(s.cost)} ${s.cycle}</div></div>
+      <div style="text-align:right"><div>${d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</div><div class="${days <= 7 ? "badge" : "mute"}">${label}</div></div>
+      <div><button class="link" data-edit="${s.id}">Edit</button><button class="link danger" data-del="${s.id}">Delete</button></div>
+    </div>`;
+              })
+              .join("")
+          : '<p class="mute">Nothing here yet. Add your first subscription above.</p>';
+      }
+
+      function clearForm() {
+        editId = null;
+        $("f").reset();
+        $("date").value = iso(new Date());
+        $("formTitle").textContent = "Add a subscription";
+        $("save").textContent = "Add subscription";
+        $("cancel").hidden = true;
+      }
+
+      $("f").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const row = {
+          name: $("name").value.trim(),
+          cost: Number($("cost").value),
+          cycle: $("cycle").value,
+          date: $("date").value,
+          cat: $("cat").value,
+        };
+        if (editId)
+          subs = subs.map((s) => (s.id === editId ? { ...s, ...row } : s));
+        else subs.push({ id: Date.now(), ...row });
+        persist();
+        clearForm();
+        render();
+      });
+      $("cancel").onclick = clearForm;
+      $("reset").onclick = () => {
+        subs = seed();
+        persist();
+        clearForm();
+        render();
+      };
+
+      $("list").addEventListener("click", (e) => {
+        const del = e.target.dataset.del,
+          ed = e.target.dataset.edit;
+        if (del) {
+          subs = subs.filter((s) => String(s.id) !== del);
+          persist();
+          render();
+        }
+        if (ed) {
+          const s = subs.find((x) => String(x.id) === ed);
+          if (!s) return;
+          editId = s.id;
+          $("name").value = s.name;
+          $("cost").value = s.cost;
+          $("cycle").value = s.cycle;
+          $("date").value = s.date;
+          $("cat").value = s.cat;
+          $("formTitle").textContent = "Edit subscription";
+          $("save").textContent = "Save changes";
+          $("cancel").hidden = false;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      });
+
+      /* start: resume session or show registration */
+      (function init() {
+        const email = read(SESSION_KEY),
+          u = email && getUsers()[email];
+        if (u) enterApp(email, u.name);
+        else showAuth(Object.keys(getUsers()).length ? "login" : "register");
+      })();
+    </script>
+  </body>
+</html>
